@@ -5,11 +5,13 @@ from scipy.signal import convolve2d
 from scipy.linalg import sqrtm
 from scipy.interpolate import RegularGridInterpolator
 
+# 基站
 class BaseStation:
     # Auto ID generation
     bs_id = itertools.count()
     sector_id = itertools.count()
 
+    #扇形        
     class Sector:
         def __init__(self, bs_id: int, center_orientation: float = 0, sector_width: float = 120,
                      frequency: int = 3.5, tx_power_dB: float = 20):
@@ -30,6 +32,7 @@ class BaseStation:
             self.number_of_PRBs = 100  # 20 MHz channel with SCS 15 KHz (LTE)
             self.connected_UEs = []
 
+    #天线面板
     class AntennaPanel:
         def __init__(self, sector_id: int,
                      n_panel_col: int = 1, n_panel_row: int = 1,
@@ -92,6 +95,7 @@ class BaseStation:
             self.sector.append(sector)
 
 
+# 用户设备
 class UserEquipment:
     pos_x = float
     pos_y = float
@@ -129,7 +133,7 @@ class UserEquipment:
 
         self.LSP = []
 
-
+# 网络
 class Network:
     def __init__(self, scenario: str = 'UMa', free_space: bool = False,
                  BSs:  Union[List[BaseStation], BaseStation] = [],
@@ -220,6 +224,7 @@ class Network:
         # TODO: Implement other scenarios:  Indoor Factory (InF) - (InF-SL, InF-DL, InF-SH, InF-DH, InF-HH)
         #                                   Indoor Office/Hotspot (InH)
 
+    #增加用户
     def add_ue(self, pos_x: float = 0, pos_y: float = 0, height: float = None, location: str = None,
                tx_power_dB: float = None, noise_floor: float = None):
 
@@ -262,6 +267,7 @@ class Network:
     #     # Todo: may need to recompute many variables using the new list of UEs
 
 
+    #增加基站
     def add_bs(self, pos_x: float = 0, pos_y: float = 0, height: float = None, number_of_sectors: int = None,
                tx_power_dB: float = None, rotation: float = None):
         if height is None:
@@ -303,6 +309,7 @@ class Network:
     #         raise 'Invalid input'
     #     # Todo: may need to recompute many variables using the new list of UEs
 
+    #视距
     def LineOfSight(self, bs: BaseStation, ue: UserEquipment):
         """
         Determine if a given BS and UE pair is in 'LOS' or 'NLOS'
@@ -676,11 +683,11 @@ class Network:
 
         return pathloss, sigma_sf
 
-    def NetworkPathloss(self, BS_list: list[BaseStation] = None, UE_list: list[UserEquipment] = None):
+    def NetworkPathloss(self, BS_list: List[BaseStation] = None, UE_list: List[UserEquipment] = None):
         """
         Computes the Pathloss and Line of Sight parameters for combinations of BSs and UEs
         :param BS_list: list of BSs
-        :param UE_list: lsit of UEs
+        :param UE_list: list of UEs
         :return: update Network attributes pathlossMatrix and shadowFadingMatrix
         """
         if BS_list is None:
@@ -3134,7 +3141,7 @@ class Network:
         # Step 12: Apply pathloss and shadowing for the channel coefficients.
 
 
-    def computeRSRP(self, BS_list: list[BaseStation] = None, UE_list: list[UserEquipment] = None):
+    def computeRSRP(self, BS_list: List[BaseStation] = None, UE_list: List[UserEquipment] = None):
         """
         Compute the RSRP
         :param BS_list: list of BaseStation
@@ -3158,7 +3165,7 @@ class Network:
                     self.RSRP_Matrix[ue.ID][sec.ID] = sec.tx_power_dB - 10*np.log10(12*sec.number_of_PRBs) - self.pathlossMatrix[ue.ID][sec.ID]
 
 
-    def UE_attach(self, BS_list: list[BaseStation] = None, UE_list: list[UserEquipment] = None):
+    def UE_attach(self, BS_list: List[BaseStation] = None, UE_list: List[UserEquipment] = None):
         """
         Performs UE attachment -> finds the sector for which UE senses the highest RSRP and 'connect' to them
         :param BS_list:
@@ -3185,7 +3192,7 @@ class Network:
             #     print(f'UE:{eu_ind} - RSRP:{self.RSRP_Matrix[eu_ind][:]}')
             #     print(f'UE:{eu_ind} - RSRP:{self.RSRP_Matrix[eu_ind][highestRSRP_sectorIndex]}')
 
-    def computeSINR(self, BS_list: list[BaseStation] = None, UE_list: list[UserEquipment] = None):
+    def computeSINR(self, BS_list: List[BaseStation] = None, UE_list: List[UserEquipment] = None):
         """
         Computes the SINR for the UEs in the UE list; it assumes that the desired signal is received from the serving
         sector and the interference is received for all other sectors.
@@ -3221,7 +3228,7 @@ class Network:
             #     print(f'UE:{eu_ind} - SINR:{self.SINR_Matrix[ue.ID]}')
 
 
-    def cell_sector_mapping(self, BS_list: list[BaseStation]):
+    def cell_sector_mapping(self, BS_list: List[BaseStation]):
         nBS = len(BS_list)
         nSectors = nBS * self.number_of_sectors
 
@@ -3253,4 +3260,6 @@ class Grid:
             self.coord_y = self.coord_y - y_length / 2
 
         self.coordinates = [self.coord_x, self.coord_y]
+
+
 
